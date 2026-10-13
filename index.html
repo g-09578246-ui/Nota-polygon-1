@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Polygon - Nota Interaktif & Pembelajaran Matematik Tingkatan 1</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter & Poppins -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- MediaPipe Hands CDNs -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            touch-action: manipulation;
+        }
+        .title-font {
+            font-family: 'Poppins', sans-serif;
+        }
+        @keyframes floatSlow {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-6px) rotate(1deg); }
+        }
+        .animate-float {
+            animation: floatSlow 4s ease-in-out infinite;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-950 via-indigo-950 to-purple-950 text-white min-h-screen flex flex-col items-center justify-between p-4 overflow-x-hidden">
+
+    <header class="w-full max-w-5xl flex items-center justify-between py-4 px-6 glass-card rounded-2xl shadow-xl mb-4 z-40">
+        <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 bg-gradient-to-tr from-indigo-500 to-pink-500 rounded-xl flex items-center justify-center text-xl shadow-lg">
+                <i class="fa-solid fa-shapes"></i>
+            </div>
+            <div>
+                <h1 class="title-font text-lg sm:text-xl font-bold tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-pink-400">POLYGON NOTES</h1>
+                <p class="text-xs text-indigo-200">Matematik Tingkatan 1 (KSSM)</p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-3">
+            <div id="statusBadge" class="hidden sm:flex items-center space-x-2 px-3 py-1 bg-emerald-500/20 border border-emerald-500/30 rounded-full text-emerald-300 text-xs">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span id="statusText">Mod Tetikus / Sentuh</span>
+            </div>
+            <button onclick="toggleWebcam()" id="camToggleBtn" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 active:scale-95 transition text-xs font-semibold rounded-xl shadow-lg flex items-center space-x-2">
+                <i class="fa-solid fa-video"></i>
+                <span id="camBtnText">Kamera Tangan</span>
+            </button>
+        </div>
+    </header>
+
+    <main class="w-full max-w-5xl flex-1 flex flex-col items-center justify-center relative mb-4">
+
+        <!-- Hidden Video for MediaPipe -->
+        <div class="absolute top-2 right-2 z-30 overflow-hidden rounded-xl border-2 border-indigo-500/50 shadow-2xl bg-black w-32 h-24 hidden" id="webcamContainer">
+            <video id="webcam" class="w-full h-full object-cover transform -scale-x-100" autoplay playsinline></video>
+            <div class="absolute bottom-1 left-1 bg-black/60 text-[10px] px-1.5 py-0.5 rounded text-indigo-300 font-mono" id="gestureLabel">Tiada Tangan</div>
+        </div>
+
+        <!-- Virtual Hand Cursor -->
+        <div id="handCursor" class="fixed w-8 h-8 rounded-full border-2 border-pink-400 bg-pink-500/30 backdrop-blur-sm z-50 pointer-events-none transform -translate-x-1/2 -translate-y-1/2 transition-all duration-75 hidden flex items-center justify-center">
+            <div class="w-2 h-2 bg-white rounded-full shadow-md"></div>
+        </div>
+
+        <div id="screenMenu" class="w-full max-w-3xl glass-card rounded-3xl p-8 shadow-2xl flex flex-col items-center text-center animate-float">
+            <div class="w-20 h-20 bg-gradient-to-br from-indigo-500 to-pink-500 rounded-3xl flex items-center justify-center text-3xl shadow-2xl mb-6">
+                <i class="fa-solid fa-book-open-reader"></i>
+            </div>
+            <h2 class="title-font text-3xl sm:text-4xl font-extrabold mb-3 text-transparent bg-clip-text bg-gradient-to-r from-white via-indigo-100 to-indigo-300">Pusat Nota & Interaktif Poligon</h2>
+            <p class="text-indigo-200 text-sm sm:text-base max-w-lg mb-8">Kuasai bab Poligon Matematik Tingkatan 1 dengan nota komprehensif, peneroka bentuk SVG interaktif, dan kuiz minda!</p>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full mb-8">
+                <button onclick="openNotes()" class="group relative p-6 bg-gradient-to-br from-blue-600/40 to-indigo-600/40 hover:from-blue-600 hover:to-indigo-600 border border-indigo-500/30 rounded-2xl transition-all duration-300 hover:scale-105 shadow-xl flex flex-col items-center">
+                    <span class="text-3xl mb-2 group-hover:scale-110 transition"><i class="fa-solid fa-book-bookmark text-blue-300"></i></span>
+                    <h3 class="font-bold text-lg mb-1">Nota Lengkap</h3>
+                    <p class="text-xs text-indigo-200">Definisi, ciri, sudut, & simetri.</p>
+                </button>
+                <button onclick="openExplorer()" class="group relative p-6 bg-gradient-to-br from-purple-600/40 to-pink-600/40 hover:from-purple-600 hover:to-pink-600 border border-purple-500/30 rounded-2xl transition-all duration-300 hover:scale-105 shadow-xl flex flex-col items-center">
+                    <span class="text-3xl mb-2 group-hover:scale-110 transition"><i class="fa-solid fa-shapes text-pink-300"></i></span>
+                    <h3 class="font-bold text-lg mb-1">Peneroka Poligon</h3>
+                    <p class="text-xs text-purple-200">Uji bentuk 3 hingga 10 sisi secara visual.</p>
+                </button>
+                <button onclick="openQuiz()" class="group relative p-6 bg-gradient-to-br from-emerald-600/40 to-teal-600/40 hover:from-emerald-600 hover:to-teal-600 border border-emerald-500/30 rounded-2xl transition-all duration-300 hover:scale-105 shadow-xl flex flex-col items-center">
+                    <span class="text-3xl mb-2 group-hover:scale-110 transition"><i class="fa-solid fa-brain text-emerald-300"></i></span>
+                    <h3 class="font-bold text-lg mb-1">Kuiz Pengukuhan</h3>
+                    <p class="text-xs text-emerald-200">Uji kefahaman anda dengan skor pantas.</p>
+                </button>
+            </div>
+
+            <div class="flex items-center space-x-2 text-xs text-indigo-300 bg-white/5 px-4 py-2 rounded-xl border border-white/5">
+                <i class="fa-solid fa-lightbulb text-amber-400"></i>
+                <span>Tip: Anda boleh guna butang kamera untuk navigasi gerak isyarat tangan MediaPipe!</span>
+            </div>
+        </div>
+
+        <div id="screenNotes" class="w-full max-w-4xl glass-card rounded-3xl p-6 sm:p-8 shadow-2xl hidden flex flex-col max-h-[80vh]">
+            <div class="flex items-center justify-between mb-4 border-b border-white/10 pb-4">
+                <button onclick="returnToMenu()" class="px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-xl text-xs font-semibold transition flex items-center space-x-2">
+                    <i class="fa-solid fa-arrow-left"></i><span>Menu Utama</span>
+                </button>
+                <h3 class="title-font font-bold text-lg text-indigo-200"><i class="fa-solid fa-book-bookmark mr-2 text-indigo-400"></i>Nota Rujukan KSSM Tingkatan 1</h3>
+                <div></div>
+            </div>
+
+            <div class="flex-1 overflow-y-auto pr-2 space-y-6 text-sm text-indigo-100">
+                <!-- Section 1 -->
+                <div class="bg-white/5 border border-white/10 rounded-2xl p-5 shadow-lg">
+                    <h4 class="font-bold text-base text-pink-400 mb-2 flex items-center"><i class="fa-solid fa-circle-question mr-2"></i>1. Apakah itu Poligon?</h4>
+                    <p class="mb-3 text-indigo-200 leading-relaxed">Poligon ialah bentuk geometri tertutup pada suatu satah yang dibatasi oleh tiga atau lebih garis lurus (sisi). Garis-garis ini bertemu di hujungnya membentuk bucu.</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                        <div class="bg-black/30 p-3 rounded-xl border border-white/5">
+                            <span class="font-bold text-emerald-400">Bukan Poligon:</span> Mempunyai garis melengkung, bukaan terbuka, atau permukaan 3D.
+                        </div>
+                        <div class="bg-black/30 p-3 rounded-xl border border-white/5">
+                            <span class="font-bold text-emerald-400">Ciri Asas:</span> Bilangan sisi = Bilangan bucu = Bilangan sudut pedalaman.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 2 -->
+                <div class="bg-white/5 border border-white/10 rounded-2xl p-5 shadow-lg">
+                    <h4 class="font-bold text-base text-pink-400 mb-2 flex items-center"><i class="fa-solid fa-list-ol mr-2"></i>2. Nama Poligon Berdasarkan Bilangan Sisi (n)</h4>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                        <div class="bg-black/30 p-2.5 rounded-xl border border-white/5"><strong>3 Sisi:</strong> Segitiga</div>
+                        <div class="bg-black/30 p-2.5 rounded-xl border border-white/5"><strong>4 Sisi:</strong> Sisi Empat</div>
+                        <div class="bg-black/25 p-2.5 rounded-xl border border-white/5"><strong>5 Sisi:</strong> Pentagon</div>
+                        <div class="bg-black/25 p-2.5 rounded-xl border border-white/5"><strong>6 Sisi:</strong> Heksagon</div>
+                        <div class="bg-black/25 p-2.5 rounded-xl border border-white/5"><strong>7 Sisi:</strong> Heptagon</div>
+                        <div class="bg-black/25 p-2.5 rounded-xl border border-white/5"><strong>8 Sisi:</strong> Oktagon</div>
+                        <div class="bg-black/25 p-2.5 rounded-xl border border-white/5"><strong>9 Sisi:</strong> Nonagon</div>
+                        <div class="bg-black/25 p-2.5 rounded-xl border border-white/5"><strong>10 Sisi:</strong> Dekagon</div>
+                    </div>
+                </div>
+
+                <!-- Section 3 -->
+                <div class="bg-white/5 border border-white/10 rounded-2xl p-5 shadow-lg">
+                    <h4 class="font-bold text-base text-pink-400 mb-2 flex items-center"><i class="fa-solid fa-square-poll-vertical mr-2"></i>3. Poligon Sekata vs Tidak Sekata</h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                        <div class="bg-indigo-900/30 p-3 rounded-xl border border-indigo-500/20">
+                            <strong class="text-indigo-300 block mb-1">Poligon Sekata (Regular Polygon):</strong>
+                            Semua sisi adalah sama panjang dan semua sudut pedalaman adalah sama saiz. (Contoh: Segitiga Sama Sisi, Sisi Empat Sama).
+                        </div>
+                        <div class="bg-purple-900/30 p-3 rounded-xl border border-purple-500/20">
+                            <strong class="text-purple-300 block mb-1">Poligon Tidak Sekata (Irregular Polygon):</strong>
+                            Sisi tidak sama panjang atau saiz sudut pedalaman tidak sama. (Contoh: Segitiga Bersudut Tegak, Segi Empat Tepat).
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 4 -->
+                <div class="bg-white/5 border border-white/10 rounded-2xl p-5 shadow-lg">
+                    <h4 class="font-bold text-base text-pink-400 mb-2 flex items-center"><i class="fa-solid fa-calculator mr-2"></i>4. Rumus Penting (Sudut & Pepenjuru)</h4>
+                    <ul class="space-y-2 text-xs text-indigo-200">
+                        <li class="bg-black/30 p-2.5 rounded-xl border border-white/5">📌 <strong>Hasil Tambah Sudut Pedalaman:</strong> $(n - 2) \times 180^\circ$ (di mana $n$ = bilangan sisi).</li>
+                        <li class="bg-black/30 p-2.5 rounded-xl border border-white/5">📌 <strong>Sudut Peluaran:</strong> Hasil tambah sudut peluaran mana-mana poligon sentiasa $360^\circ$.</li>
+                        <li class="bg-black/30 p-2.5 rounded-xl border border-white/5">📌 <strong>Bilangan Pepenjuru:</strong> $\frac{n(n - 3)}{2}$.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div id="screenExplorer" class="w-full max-w-4xl glass-card rounded-3xl p-6 sm:p-8 shadow-2xl hidden flex flex-col">
+            <div class="flex items-center justify-between mb-4 border-b border-white/10 pb-4">
+                <button onclick="returnToMenu()" class="px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-xl text-xs font-semibold transition flex items-center space-x-2">
+                    <i class="fa-solid fa-arrow-left"></i><span>Menu Utama</span>
+                </button>
+                <h3 class="title-font font-bold text-lg text-indigo-200"><i class="fa-solid fa-shapes mr-2 text-pink-400"></i>Peneroka Bentuk Poligon Interaktif</h3>
+                <div></div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 items-center">
+                <!-- Left: Controls & Slider -->
+                <div class="bg-black/30 p-5 rounded-2xl border border-white/10 flex flex-col space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-indigo-300 mb-1">Pilih Bilangan Sisi (n): <span id="sideCountLabel" class="text-pink-400 font-bold text-sm">3</span></label>
+                        <input type="range" id="sideRange" min="3" max="10" value="3" oninput="updatePolygonExplorer(this.value)" class="w-full accent-pink-500 cursor-pointer">
+                    </div>
+                    <div class="space-y-2 text-xs">
+                        <div class="flex justify-between bg-white/5 p-2 rounded-xl"><span>Nama Poligon:</span><strong id="polyName" class="text-indigo-200">Segitiga</strong></div>
+                        <div class="flex justify-between bg-white/5 p-2 rounded-xl"><span>Hasil Sudut Pedalaman:</span><strong id="polyInterior" class="text-emerald-400">180°</strong></div>
+                        <div class="flex justify-between bg-white/5 p-2 rounded-xl"><span>Bilangan Pepenjuru:</span><strong id="polyDiagonals" class="text-cyan-400">0</strong></div>
+                        <div class="flex justify-between bg-white/5 p-2 rounded-xl"><span>Paksi Simetri:</span><strong id="polySymmetry" class="text-amber-400">3</strong></div>
+                    </div>
+                    <p class="text-[11px] text-indigo-300/80 italic">Ubah slider untuk melihat perubahan ciri poligon secara langsung!</p>
+                </div>
+
+                <!-- Right: SVG Visualizer -->
+                <div class="sm:col-span-2 bg-slate-950/80 rounded-2xl border border-indigo-500/30 p-6 flex flex-col items-center justify-center relative min-h-[300px] shadow-inner">
+                    <svg id="polygonSvg" viewBox="0 0 300 300" class="w-64 h-64 drop-shadow-[0_0_15px_rgba(236,72,153,0.3)]">
+                        <!-- Poligon dilukis secara dinamik di JS -->
+                    </svg>
+                    <div id="polyDescBanner" class="mt-3 text-xs text-indigo-300 text-center font-medium bg-white/5 px-4 py-2 rounded-xl border border-white/5">
+                        Segitiga: Poligon dengan 3 sisi dan 3 bucu.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="screenQuiz" class="w-full max-w-3xl glass-card rounded-3xl p-6 sm:p-8 shadow-2xl hidden flex flex-col">
+            <div class="flex items-center justify-between mb-6 border-b border-white/10 pb-4">
+                <button onclick="returnToMenu()" class="px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-xl text-xs font-semibold transition flex items-center space-x-2">
+                    <i class="fa-solid fa-arrow-left"></i><span>Menu</span>
+                </button>
+                <div class="flex items-center space-x-4">
+                    <div class="text-xs text-indigo-300">Soalan: <span id="quizCurrentQ" class="font-bold text-white">1</span>/5</div>
+                    <div class="text-xs text-indigo-300">Skor: <span id="quizScore" class="font-bold text-emerald-400">0</span></div>
+                    <div class="text-xs text-indigo-300">Streak: <span id="quizStreak" class="font-bold text-pink-400">🔥 0</span></div>
+                </div>
+            </div>
+
+            <div class="flex flex-col items-center mb-6">
+                <h3 id="quizQuestionText" class="title-font text-lg sm:text-xl font-bold text-center mb-2 text-indigo-100">Soalan kuiz akan dipaparkan di sini...</h3>
+                <p id="quizSubText" class="text-xs text-indigo-300 text-center"></p>
+            </div>
+
+            <div id="quizOptionsGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
+                <!-- Opsyen dijana dinamik -->
+            </div>
+        </div>
+
+        <div id="screenResult" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+            <div class="w-full max-w-md bg-slate-900 border border-indigo-500/40 rounded-3xl p-8 shadow-2xl text-center flex flex-col items-center">
+                <div class="w-20 h-20 bg-gradient-to-br from-amber-400 to-pink-500 rounded-3xl flex items-center justify-center text-3xl shadow-xl mb-4 animate-bounce">
+                    <i class="fa-solid fa-trophy text-slate-950"></i>
+                </div>
+                <h3 class="title-font text-2xl font-bold mb-2">Tahniah! Syabas!</h3>
+                <p class="text-indigo-200 text-sm mb-6" id="resultMessage">Anda telah menamatkan nota & kuiz poligon dengan cemerlang.</p>
+                
+                <div class="bg-white/5 border border-white/10 rounded-2xl p-4 w-full mb-6 flex justify-around">
+                    <div>
+                        <div class="text-xs text-indigo-300">Skor Akhir</div>
+                        <div class="title-font text-2xl font-extrabold text-emerald-400" id="finalScore">0</div>
+                    </div>
+                    <div class="border-r border-white/10"></div>
+                    <div>
+                        <div class="text-xs text-indigo-300">Streak Tertinggi</div>
+                        <div class="title-font text-2xl font-extrabold text-pink-400" id="finalStreak">0</div>
+                    </div>
+                </div>
+
+                <div class="flex space-x-3 w-full">
+                    <button onclick="returnToMenu()" class="flex-1 py-3 bg-white/10 hover:bg-white/20 rounded-xl font-semibold text-sm transition">Menu Utama</button>
+                    <button onclick="openQuiz()" class="flex-1 py-3 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-semibold text-sm transition shadow-lg">Cuba Lagi</button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="w-full max-w-5xl text-center text-xs text-indigo-400/60 py-2">
+        KSSM Matematik Tingkatan 1 • Nota Interaktif & MediaPipe Hands
+    </footer>
+
+    <script>
+        // --- Web Audio API Sound System ---
+        let audioCtx = null;
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playSound(type) {
+            try {
+                initAudio();
+                if (!audioCtx) return;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                const now = audioCtx.currentTime;
+
+                if (type === 'correct') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(440, now);
+                    osc.frequency.exponentialRampToValueAtTime(880, now + 0.15);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                } else if (type === 'wrong') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(220, now);
+                    osc.frequency.exponentialRampToValueAtTime(110, now + 0.2);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+                    osc.start(now);
+                    osc.stop(now + 0.25);
+                } else if (type === 'click') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(600, now);
+                    gain.gain.setValueAtTime(0.1, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+                    osc.start(now);
+                    osc.stop(now + 0.08);
+                } else if (type === 'win') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(523.25, now);
+                    osc.frequency.setValueAtTime(659.25, now + 0.1);
+                    osc.frequency.setValueAtTime(783.99, now + 0.2);
+                    osc.frequency.setValueAtTime(1046.50, now + 0.3);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
+                    osc.start(now);
+                    osc.stop(now + 0.6);
+                }
+            } catch (e) {
+                console.error("Audio error:", e);
+            }
+        }
+
+        // --- Poligon Data (Form 1 KSSM) ---
+        const polygonsMetadata = {
+            3: { name: "Segitiga (Triangle)", interior: "180°", diagonals: 0, symmetry: 3, desc: "Segitiga: Poligon paling ringkas dengan 3 sisi dan 3 bucu." },
+            4: { name: "Sisi Empat (Quadrilateral)", interior: "360°", diagonals: 2, symmetry: 4, desc: "Sisi Empat: Mempunyai 4 sisi seperti segi empat sama atau segi empat tepat." },
+            5: { name: "Pentagon", interior: "540°", diagonals: 5, symmetry: 5, desc: "Pentagon: Poligon sekata dengan 5 sisi dan 5 bucu." },
+            6: { name: "Heksagon (Hexagon)", interior: "720°", diagonals: 9, symmetry: 6, desc: "Heksagon: Bentuk sarang lebah semula jadi yang mempunyai 6 sisi." },
+            7: { name: "Heptagon", interior: "900°", diagonals: 14, symmetry: 7, desc: "Heptagon: Poligon satah yang mempunyai 7 sisi." },
+            8: { name: "Oktagon (Octagon)", interior: "1080°", diagonals: 20, symmetry: 8, desc: "Oktagon: Bentuk papan tanda berhenti (STOP) yang mempunyai 8 sisi." },
+            9: { name: "Nonagon", interior: "1260°", diagonals: 27, symmetry: 9, desc: "Nonagon: Poligon bersisi 9." },
+            10: { name: "Dekagon (Decagon)", interior: "1440°", diagonals: 35, symmetry: 10, desc: "Dekagon: Poligon besar bersisi 10." }
+        };
+
+        // --- Quiz Data ---
+        const quizData = [
+            {
+                question: "Apakah nama poligon yang mempunyai 5 sisi?",
+                subtext: "Kenalpasti ciri asas bilangan sisi.",
+                options: ["Sisi Empat", "Pentagon", "Heksagon", "Oktagon"],
+                answer: "Pentagon"
+            },
+            {
+                question: "Berapakah hasil tambah sudut pedalaman bagi sebuah Sisi Empat (4 sisi)?",
+                subtext: "Formula: (n - 2) × 180°",
+                options: ["180°", "360°", "540°", "720°"],
+                answer: "360°"
+            },
+            {
+                question: "Berapakah bilangan pepenjuru bagi sebuah Heksagon (6 sisi)?",
+                subtext: "Formula: n(n - 3) / 2",
+                options: ["5", "9", "14", "20"],
+                answer: "9"
+            },
+            {
+                question: "Antara berikut, yang manakah ciri POLIGON SEKATA?",
+                subtext: "Perbezaan poligon sekata dan tidak sekata.",
+                options: ["Sisi tidak sama panjang", "Sudut pedalaman berbeza", "Semua sisi sama panjang & sudut sama saiz", "Mempunyai garisan melengkung"],
+                answer: "Semua sisi sama panjang & sudut sama saiz"
+            },
+            {
+                question: "Berapakah hasil tambah sudut peluaran bagi mana-mana poligon?",
+                subtext: "Teorem sudut peluaran poligon.",
+                options: ["180°", "360°", "540°", "Bergantung pada bilangan sisi"],
+                answer: "360°"
+            }
+        ];
+
+        let quizIndex = 0;
+        let quizScoreVal = 0;
+        let quizStreakVal = 0;
+        let maxStreakVal = 0;
+
+        // --- Navigation / Screen Control ---
+        function showScreen(screenId) {
+            document.getElementById('screenMenu').classList.add('hidden');
+            document.getElementById('screenNotes').classList.add('hidden');
+            document.getElementById('screenExplorer').classList.add('hidden');
+            document.getElementById('screenQuiz').classList.add('hidden');
+            document.getElementById('screenResult').classList.add('hidden');
+            document.getElementById(screenId).classList.remove('hidden');
+        }
+
+        function returnToMenu() {
+            playSound('click');
+            showScreen('screenMenu');
+        }
+
+        function openNotes() {
+            playSound('click');
+            showScreen('screenNotes');
+        }
+
+        function openExplorer() {
+            playSound('click');
+            showScreen('screenExplorer');
+            updatePolygonExplorer(3);
+        }
+
+        function openQuiz() {
+            playSound('click');
+            quizIndex = 0;
+            quizScoreVal = 0;
+            quizStreakVal = 0;
+            maxStreakVal = 0;
+            showScreen('screenQuiz');
+            loadQuizQuestion();
+        }
+
+        // --- SVG Polygon Explorer Logic ---
+        function updatePolygonExplorer(sides) {
+            document.getElementById('sideCountLabel').innerText = sides;
+            const meta = polygonsMetadata[sides];
+            document.getElementById('polyName').innerText = meta.name;
+            document.getElementById('polyInterior').innerText = meta.interior;
+            document.getElementById('polyDiagonals').innerText = meta.diagonals;
+            document.getElementById('polySymmetry').innerText = meta.symmetry;
+            document.getElementById('polyDescBanner').innerText = meta.desc;
+
+            const svg = document.getElementById('polygonSvg');
+            svg.innerHTML = '';
+            const cx = 150, cy = 150, r = 110;
+            const points = [];
+
+            for (let i = 0; i < sides; i++) {
+                const angle = (i * 2 * Math.PI) / sides - Math.PI / 2;
+                const x = cx + r * Math.cos(angle);
+                const y = cy + r * Math.sin(angle);
+                points.push(`${x},${y}`);
+            }
+
+            // Draw polygon shape
+            const polygonElem = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+            polygonElem.setAttribute('points', points.join(' '));
+            polygonElem.setAttribute('fill', 'rgba(236, 72, 153, 0.2)');
+            polygonElem.setAttribute('stroke', '#ec4899');
+            polygonElem.setAttribute('stroke-width', '3');
+            svg.appendChild(polygonElem);
+
+            // Draw vertex dots
+            points.forEach(pt => {
+                const [x, y] = pt.split(',');
+                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                circle.setAttribute('cx', x);
+                circle.setAttribute('cy', y);
+                circle.setAttribute('r', '5');
+                circle.setAttribute('fill', '#ffffff');
+                svg.appendChild(circle);
+            });
+        }
+
+        // --- Quiz Logic ---
+        function loadQuizQuestion() {
+            if (quizIndex >= quizData.length) {
+                endQuiz();
+                return;
+            }
+
+            const q = quizData[quizIndex];
+            document.getElementById('quizCurrentQ').innerText = quizIndex + 1;
+            document.getElementById('quizScore').innerText = quizScoreVal;
+            document.getElementById('quizStreak').innerText = `🔥 ${quizStreakVal}`;
+            document.getElementById('quizQuestionText').innerText = q.question;
+            document.getElementById('quizSubText').innerText = q.subtext;
+
+            const grid = document.getElementById('quizOptionsGrid');
+            grid.innerHTML = '';
+            q.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'p-4 bg-white/5 hover:bg-indigo-600/30 border border-white/10 hover:border-indigo-500 rounded-2xl font-semibold text-sm transition-all duration-200 text-left flex items-center justify-between shadow-lg';
+                btn.innerHTML = `<span>${opt}</span><span class="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-xs text-indigo-300 font-mono">${idx + 1}</span>`;
+                btn.onclick = () => handleQuizAnswer(opt, q.answer);
+                grid.appendChild(btn);
+            });
+        }
+
+        function handleQuizAnswer(selected, correct) {
+            if (selected === correct) {
+                playSound('correct');
+                quizScoreVal += 20 + (quizStreakVal * 5);
+                quizStreakVal++;
+                if (quizStreakVal > maxStreakVal) maxStreakVal = quizStreakVal;
+            } else {
+                playSound('wrong');
+                quizStreakVal = 0;
+            }
+            quizIndex++;
+            loadQuizQuestion();
+        }
+
+        function endQuiz() {
+            playSound('win');
+            document.getElementById('finalScore').innerText = quizScoreVal;
+            document.getElementById('finalStreak').innerText = maxStreakVal;
+            document.getElementById('screenResult').classList.remove('hidden');
+        }
+
+        // --- MediaPipe Hands & Mouse Fallback ---
+        let isWebcamActive = false;
+        let cameraInstance = null, handsInstance = null;
+        let cursorX = window.innerWidth / 2, cursorY = window.innerHeight / 2;
+        let isPinched = false, wasPinchedLastFrame = false;
+
+        window.addEventListener('mousemove', (e) => {
+            if (!isWebcamActive) {
+                cursorX = e.clientX;
+                cursorY = e.clientY;
+                updateCursorUI(false);
+            }
+        });
+
+        window.addEventListener('mousedown', () => {
+            if (!isWebcamActive) {
+                isPinched = true;
+                updateCursorUI(true);
+            }
+        });
+
+        window.addEventListener('mouseup', () => {
+            if (!isWebcamActive) {
+                isPinched = false;
+                updateCursorUI(false);
+            }
+        });
+
+        function updateCursorUI(pinched) {
+            const cursor = document.getElementById('handCursor');
+            cursor.style.left = `${cursorX}px`;
+            cursor.style.top = `${cursorY}px`;
+            cursor.classList.remove('hidden');
+
+            if (pinched) {
+                cursor.classList.add('scale-75', 'bg-emerald-500/50', 'border-emerald-400');
+                cursor.classList.remove('bg-pink-500/30', 'border-pink-400');
+            } else {
+                cursor.classList.remove('scale-75', 'bg-emerald-500/50', 'border-emerald-400');
+                cursor.classList.add('bg-pink-500/30', 'border-pink-400');
+            }
+        }
+
+        function toggleWebcam() {
+            playSound('click');
+            isWebcamActive = !isWebcamActive;
+            const container = document.getElementById('webcamContainer');
+            const statusText = document.getElementById('statusText');
+            const camBtnText = document.getElementById('camBtnText');
+
+            if (isWebcamActive) {
+                container.classList.remove('hidden');
+                statusText.innerText = 'Mod Tangan MediaPipe Aktif';
+                camBtnText.innerText = 'Tutup Kamera';
+                initMediaPipeHands();
+            } else {
+                container.classList.add('hidden');
+                statusText.innerText = 'Mod Tetikus / Sentuh';
+                camBtnText.innerText = 'Kamera Tangan';
+                if (cameraInstance) cameraInstance.stop();
+                document.getElementById('handCursor').classList.add('hidden');
+            }
+        }
+
+        function initMediaPipeHands() {
+            const videoElement = document.getElementById('webcam');
+            handsInstance = new Hands({
+                locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+            });
+
+            handsInstance.setOptions({
+                maxNumHands: 1,
+                modelComplexity: 1,
+                minDetectionConfidence: 0.6,
+                minTrackingConfidence: 0.6
+            });
+
+            handsInstance.onResults(onHandResults);
+
+            cameraInstance = new Camera(videoElement, {
+                onFrame: async () => {
+                    if (isWebcamActive) {
+                        await handsInstance.send({ image: videoElement });
+                    }
+                },
+                width: 320,
+                height: 240
+            });
+            cameraInstance.start();
+        }
+
+        function onHandResults(results) {
+            const labelEl = document.getElementById('gestureLabel');
+            if (!results.multiHandLandmarks || results.multiHandLandmarks.length === 0) {
+                labelEl.innerText = 'Tiada Tangan';
+                return;
+            }
+
+            labelEl.innerText = 'Tangan Dikesan ✓';
+            const landmarks = results.multiHandLandmarks[0];
+            const indexTip = landmarks[8];
+            const thumbTip = landmarks[4];
+
+            cursorX = (1 - indexTip.x) * window.innerWidth;
+            cursorY = indexTip.y * window.innerHeight;
+
+            const pinchDist = Math.hypot(indexTip.x - thumbTip.x, indexTip.y - thumbTip.y);
+            isPinched = pinchDist < 0.08;
+
+            updateCursorUI(isPinched);
+
+            if (isPinched && !wasPinchedLastFrame) {
+                simulateClickAtCursor();
+            }
+            wasPinchedLastFrame = isPinched;
+        }
+
+        function simulateClickAtCursor() {
+            const elem = document.elementFromPoint(cursorX, cursorY);
+            if (elem) {
+                const clickable = elem.closest('button, input[type="range"]');
+                if (clickable) {
+                    clickable.click();
+                }
+            }
+        }
+    </script>
+</body>
+</html>
